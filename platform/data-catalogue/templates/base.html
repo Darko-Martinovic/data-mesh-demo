@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Data Catalogue{% endblock %} | Data Mesh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mesh: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .htmx-request { opacity: 0.5; transition: opacity 300ms; }
+        .htmx-settling { opacity: 1; transition: opacity 300ms; }
+    </style>
+</head>
+<body class="h-full bg-gray-50">
+    <div class="min-h-full">
+        <!-- Navigation -->
+        <nav class="bg-mesh-700 shadow-lg">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="flex h-16 items-center justify-between">
+                    <div class="flex items-center">
+                        <a href="/" class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10">
+                                <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                                </svg>
+                            </div>
+                            <span class="text-xl font-bold text-white">Data Mesh</span>
+                        </a>
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="/" class="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-mesh-600 {% if active_page == 'home' %}bg-mesh-800{% endif %}">Dashboard</a>
+                            <a href="/ui/catalogue" class="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-mesh-600 {% if active_page == 'catalogue' %}bg-mesh-800{% endif %}">Catalogue</a>
+                            <a href="/ui/health" class="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-mesh-600 {% if active_page == 'health' %}bg-mesh-800{% endif %}">Health</a>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <a href="/docs" target="_blank" class="rounded-md bg-mesh-600 px-3 py-2 text-sm font-medium text-white hover:bg-mesh-500">
+                            API Docs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-auto border-t border-gray-200 bg-white">
+            <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+                <p class="text-center text-sm text-gray-500">
+                    Data Mesh Demo &mdash; FastAPI + SQLite + asyncio
+                </p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

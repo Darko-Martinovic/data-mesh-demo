@@ -1,0 +1,62 @@
+# Each service is built from the REPO ROOT as context so Dockerfiles can COPY
+# both the domain folder and the shared platform/event_bus package.
+
+services:
+
+  # ── Data Catalogue (port 8000) ─────────────────────────────────────────────
+  catalogue:
+    build:
+      context: .
+      dockerfile: platform/data-catalogue/Dockerfile
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── Customer Domain (port 8001) ────────────────────────────────────────────
+  customer:
+    build:
+      context: .
+      dockerfile: domains/customer/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - CATALOGUE_URL=http://catalogue:8000
+      - SELF_URL=http://customer:8001
+    depends_on:
+      - catalogue
+    restart: on-failure
+
+  # ── Orders Domain (port 8002) ──────────────────────────────────────────────
+  orders:
+    build:
+      context: .
+      dockerfile: domains/orders/Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      - CATALOGUE_URL=http://catalogue:8000
+      - SELF_URL=http://orders:8002
+      - CUSTOMER_URL=http://customer:8001
+      - INVENTORY_URL=http://inventory:8003
+    depends_on:
+      - catalogue
+    restart: on-failure
+
+  # ── Inventory Domain (port 8003) ───────────────────────────────────────────
+  inventory:
+    build:
+      context: .
+      dockerfile: domains/inventory/Dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      - CATALOGUE_URL=http://catalogue:8000
+      - SELF_URL=http://inventory:8003
+    depends_on:
+      - catalogue
+    restart: on-failure
