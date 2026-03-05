@@ -39,10 +39,38 @@ def _to_localhost_url(url: str) -> str:
     return url
 
 
+DOMAIN_COLORS = {
+    "customer": {
+        "border": "border-blue-500",
+        "label_bg": "bg-blue-100",
+        "label_text": "text-blue-800",
+    },
+    "orders": {
+        "border": "border-purple-500",
+        "label_bg": "bg-purple-100",
+        "label_text": "text-purple-800",
+    },
+    "inventory": {
+        "border": "border-green-500",
+        "label_bg": "bg-green-100",
+        "label_text": "text-green-800",
+    },
+}
+
+DEFAULT_DOMAIN_COLOR = {
+    "border": "border-gray-500",
+    "label_bg": "bg-gray-100",
+    "label_text": "text-gray-800",
+}
+
+
 def _externalize_product(product: dict) -> dict:
-    """Convert product endpoint to browser-accessible URL."""
+    """Convert product endpoint to browser-accessible URL and add domain colors."""
     p = dict(product)
     p["endpoint"] = _to_localhost_url(p["endpoint"])
+    colors = DOMAIN_COLORS.get(p["domain"], DEFAULT_DOMAIN_COLOR)
+    p["label_bg"] = colors["label_bg"]
+    p["label_text"] = colors["label_text"]
     return p
 
 
@@ -128,12 +156,6 @@ def health():
 
 
 # ── UI Routes ──────────────────────────────────────────────────────────────────
-
-DOMAIN_COLORS = {
-    "customer": "border-blue-500",
-    "orders": "border-purple-500",
-    "inventory": "border-green-500",
-}
 
 
 async def _get_health_data() -> Dict[str, Any]:
@@ -234,6 +256,7 @@ async def ui_catalogue(
         "domains": all_domains,
         "current_domain": domain,
         "search_query": q,
+        "timestamp": datetime.now().strftime("%H:%M:%S"),
     })
 
 
@@ -281,4 +304,34 @@ async def ui_health_partial(request: Request):
     return templates.TemplateResponse("partials/health_cards.html", {
         "request": request,
         "services": services,
+    })
+
+
+@app.get("/ui/partials/catalogue-content", response_class=HTMLResponse, include_in_schema=False)
+async def ui_catalogue_partial(
+    request: Request,
+    domain: Optional[str] = None,
+    q: Optional[str] = None,
+):
+    """HTMX partial for catalogue product grid (auto-refresh)."""
+    products = store.list_all()
+
+    if domain:
+        products = [p for p in products if p["domain"] == domain]
+
+    if q:
+        q_lower = q.lower()
+        products = [
+            p for p in products
+            if q_lower in p["name"].lower()
+            or q_lower in p["description"].lower()
+            or any(q_lower in tag.lower() for tag in p.get("tags", []))
+        ]
+
+    return templates.TemplateResponse("partials/catalogue_content.html", {
+        "request": request,
+        "products": [_externalize_product(p) for p in products],
+        "current_domain": domain,
+        "search_query": q,
+        "timestamp": datetime.now().strftime("%H:%M:%S"),
     })

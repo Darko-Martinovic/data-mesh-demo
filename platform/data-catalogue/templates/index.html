@@ -152,7 +152,7 @@
                             <a href="/ui/product/{{ product.domain }}/{{ product.name }}" class="font-medium text-mesh-600 hover:text-mesh-500">{{ product.name }}</a>
                         </td>
                         <td class="whitespace-nowrap px-6 py-4">
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-800 capitalize">{{ product.domain }}</span>
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ product.label_bg }} {{ product.label_text }} capitalize">{{ product.domain }}</span>
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ product.version }}</td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{{ product.owner }}</td>

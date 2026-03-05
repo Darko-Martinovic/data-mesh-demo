@@ -1,0 +1,77 @@
+<!-- Results Info -->
+<div class="flex items-center justify-between mb-6">
+    <p class="text-sm text-gray-600">
+        Showing <span class="font-medium">{{ products|length }}</span> data product{% if products|length != 1 %}s{% endif %}
+        {% if current_domain %} in <span class="font-medium capitalize">{{ current_domain }}</span>{% endif %}
+        {% if search_query %} matching "<span class="font-medium">{{ search_query }}</span>"{% endif %}
+    </p>
+    <p class="text-sm text-gray-400">
+        Last updated: <span id="catalogue-timestamp">{{ timestamp }}</span>
+    </p>
+</div>
+
+<!-- Product Cards Grid -->
+{% if products %}
+<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {% for product in products %}
+    <div class="overflow-hidden rounded-xl bg-white shadow hover:shadow-lg transition-shadow">
+        <div class="p-6">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <a href="/ui/product/{{ product.domain }}/{{ product.name }}" class="text-lg font-semibold text-gray-900 hover:text-mesh-600">
+                        {{ product.name }}
+                    </a>
+                    <p class="mt-1 text-sm text-gray-600 line-clamp-2">{{ product.description }}</p>
+                </div>
+                <span class="ml-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ product.label_bg }} {{ product.label_text }} capitalize">
+                    {{ product.domain }}
+                </span>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+                {% for tag in product.tags %}
+                <span class="inline-flex items-center rounded-md bg-mesh-50 px-2 py-1 text-xs font-medium text-mesh-700">
+                    {{ tag }}
+                </span>
+                {% endfor %}
+            </div>
+
+            <div class="mt-4 border-t border-gray-100 pt-4">
+                <dl class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <dt class="text-gray-500">Version</dt>
+                        <dd class="font-medium text-gray-900">{{ product.version }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-gray-500">Owner</dt>
+                        <dd class="font-medium text-gray-900">{{ product.owner }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="mt-4 flex gap-2">
+                <a href="/ui/product/{{ product.domain }}/{{ product.name }}" class="flex-1 inline-flex items-center justify-center rounded-lg bg-mesh-600 px-4 py-2 text-sm font-medium text-white hover:bg-mesh-700">
+                    View Details
+                </a>
+                <a href="{{ product.endpoint }}" target="_blank" class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="rounded-xl bg-white p-12 text-center shadow">
+    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+    </svg>
+    <h3 class="mt-4 text-lg font-medium text-gray-900">No data products found</h3>
+    <p class="mt-2 text-sm text-gray-500">Try adjusting your search or filter criteria.</p>
+    <a href="/ui/catalogue" class="mt-4 inline-flex items-center rounded-lg bg-mesh-600 px-4 py-2 text-sm font-medium text-white hover:bg-mesh-700">
+        Clear filters
+    </a>
+</div>
+{% endif %}

@@ -31,7 +31,8 @@ _SKU_PRICE: dict = {
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     db.init_db()
-    await catalogue.register_products()
+    # Registration commented out to demonstrate manual registration via API
+    # await catalogue.register_products()
     yield
 
 

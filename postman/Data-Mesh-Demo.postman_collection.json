@@ -1,0 +1,648 @@
+{
+  "info": {
+    "_postman_id": "data-mesh-demo-collection",
+    "name": "Data Mesh Demo",
+    "description": "A three-domain Data Mesh demo built with FastAPI + SQLite + asyncio.\n\n## Domains\n- **Data Catalogue** (Port 8000): Central registry for data products\n- **Customer** (Port 8001): Customer profiles and segments\n- **Orders** (Port 8002): Order history and revenue (manual registration)\n- **Inventory** (Port 8003): Stock levels and alerts\n\n## Self-Serve Demo\nThe **Orders domain does NOT auto-register** at startup. Use the 'Self-Serve Registration Demo' folder to manually register its products and see them appear in the catalogue. This demonstrates the self-serve platform principle of Data Mesh.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Data Catalogue",
+      "description": "Central registry: discover, register, and monitor data products across all domains.",
+      "item": [
+        {
+          "name": "List All Data Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue"]
+            },
+            "description": "Returns all registered data products from all domains."
+          }
+        },
+        {
+          "name": "Search Data Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue/search?q=customer",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "customer",
+                  "description": "Keyword to search in name, description, and tags"
+                }
+              ]
+            },
+            "description": "Full-text search across name, description, and tags."
+          }
+        },
+        {
+          "name": "List Products by Domain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue/customer",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue", "customer"]
+            },
+            "description": "List data products for a specific domain (customer, orders, inventory)."
+          }
+        },
+        {
+          "name": "Health Check - All Services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/health/all",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["health", "all"]
+            },
+            "description": "Ping /health on every registered domain and return status."
+          }
+        },
+        {
+          "name": "Health Check - Catalogue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/health",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check for the Data Catalogue service."
+          }
+        },
+        {
+          "name": "Register Data Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"example-product\",\n  \"domain\": \"example\",\n  \"description\": \"An example data product\",\n  \"version\": \"1.0.0\",\n  \"endpoint\": \"http://localhost:9000/data-products/example\",\n  \"tags\": [\"example\", \"demo\"],\n  \"owner\": \"example-team\",\n  \"sla\": {\n    \"uptime\": \"99.9%\",\n    \"freshness\": \"real-time\"\n  },\n  \"schema_definition\": {\n    \"id\": \"string\",\n    \"value\": \"string\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue/register",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue", "register"]
+            },
+            "description": "Register or update a data product in the catalogue."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Domain",
+      "description": "Owns customer identity and segmentation data products.",
+      "item": [
+        {
+          "name": "List All Customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{customer_base_url}}/data-products/customer-profiles",
+              "host": ["{{customer_base_url}}"],
+              "path": ["data-products", "customer-profiles"]
+            },
+            "description": "List all customer profiles (email masked by default)."
+          }
+        },
+        {
+          "name": "List All Customers (Unmasked)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{customer_base_url}}/data-products/customer-profiles?unmasked=true",
+              "host": ["{{customer_base_url}}"],
+              "path": ["data-products", "customer-profiles"],
+              "query": [
+                {
+                  "key": "unmasked",
+                  "value": "true",
+                  "description": "Return real email addresses (PII)"
+                }
+              ]
+            },
+            "description": "List all customer profiles with real email addresses."
+          }
+        },
+        {
+          "name": "Get Customer by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{customer_base_url}}/data-products/customer-profiles/{{customer_id}}",
+              "host": ["{{customer_base_url}}"],
+              "path": ["data-products", "customer-profiles", "{{customer_id}}"]
+            },
+            "description": "Get a single customer profile by ID."
+          }
+        },
+        {
+          "name": "Create Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('customer_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"segment\": \"premium\"\n}"
+            },
+            "url": {
+              "raw": "{{customer_base_url}}/data-products/customer-profiles",
+              "host": ["{{customer_base_url}}"],
+              "path": ["data-products", "customer-profiles"]
+            },
+            "description": "Create a new customer. Publishes customer.created event.\n\nSegment options: premium, standard, basic"
+          }
+        },
+        {
+          "name": "Get Customer Segments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{customer_base_url}}/data-products/customer-segments",
+              "host": ["{{customer_base_url}}"],
+              "path": ["data-products", "customer-segments"]
+            },
+            "description": "Aggregated breakdown of customers by segment."
+          }
+        },
+        {
+          "name": "Health Check - Customer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{customer_base_url}}/health",
+              "host": ["{{customer_base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check for the Customer domain."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders Domain",
+      "description": "Owns order transactions and revenue data products.",
+      "item": [
+        {
+          "name": "List All Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{orders_base_url}}/data-products/order-history",
+              "host": ["{{orders_base_url}}"],
+              "path": ["data-products", "order-history"]
+            },
+            "description": "List all orders."
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{orders_base_url}}/data-products/order-history/{{order_id}}",
+              "host": ["{{orders_base_url}}"],
+              "path": ["data-products", "order-history", "{{order_id}}"]
+            },
+            "description": "Get a single order by ID."
+          }
+        },
+        {
+          "name": "Create Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('order_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": \"{{customer_id}}\",\n  \"sku\": \"{{sku}}\",\n  \"quantity\": 3\n}"
+            },
+            "url": {
+              "raw": "{{orders_base_url}}/data-products/order-history",
+              "host": ["{{orders_base_url}}"],
+              "path": ["data-products", "order-history"]
+            },
+            "description": "Create an order.\n\nFlow:\n1. Validates customer exists (calls Customer domain)\n2. Reserves stock (calls Inventory domain)\n3. Publishes order.created event\n\nAvailable SKUs: SKU-A, SKU-B, SKU-C, SKU-D, SKU-E"
+          }
+        },
+        {
+          "name": "Get Revenue Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{orders_base_url}}/data-products/revenue-summary",
+              "host": ["{{orders_base_url}}"],
+              "path": ["data-products", "revenue-summary"]
+            },
+            "description": "Aggregated revenue metrics broken down by SKU."
+          }
+        },
+        {
+          "name": "Health Check - Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{orders_base_url}}/health",
+              "host": ["{{orders_base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check for the Orders domain."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventory Domain",
+      "description": "Owns stock levels and inventory management data products.",
+      "item": [
+        {
+          "name": "List All Stock Levels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{inventory_base_url}}/data-products/stock-levels",
+              "host": ["{{inventory_base_url}}"],
+              "path": ["data-products", "stock-levels"]
+            },
+            "description": "List current stock levels for all SKUs."
+          }
+        },
+        {
+          "name": "Get Stock by SKU",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{inventory_base_url}}/data-products/stock-levels/{{sku}}",
+              "host": ["{{inventory_base_url}}"],
+              "path": ["data-products", "stock-levels", "{{sku}}"]
+            },
+            "description": "Get stock level for a specific SKU."
+          }
+        },
+        {
+          "name": "Reserve Stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"{{sku}}\",\n  \"quantity\": 5\n}"
+            },
+            "url": {
+              "raw": "{{inventory_base_url}}/data-products/stock-levels/reserve",
+              "host": ["{{inventory_base_url}}"],
+              "path": ["data-products", "stock-levels", "reserve"]
+            },
+            "description": "Reserve (decrement) stock for an order.\n\nNormally called by the Orders domain. Publishes inventory.low event if stock falls below threshold."
+          }
+        },
+        {
+          "name": "Get Low Stock Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{inventory_base_url}}/data-products/low-stock-alerts",
+              "host": ["{{inventory_base_url}}"],
+              "path": ["data-products", "low-stock-alerts"]
+            },
+            "description": "List products currently below their reorder threshold."
+          }
+        },
+        {
+          "name": "Health Check - Inventory",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{inventory_base_url}}/health",
+              "host": ["{{inventory_base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check for the Inventory domain."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Self-Serve Registration Demo",
+      "description": "Demonstrates the self-serve Data Catalogue principle.\n\nThe Orders domain does NOT auto-register at startup. Use these requests to manually register its data products and see them appear in the catalogue.\n\nThis shows that domains can join the mesh at any time without coordinating with a central team.",
+      "item": [
+        {
+          "name": "1. Check Catalogue (Orders Missing)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue"]
+            },
+            "description": "First, check the catalogue. You'll see Customer and Inventory products, but NO Orders products (they don't auto-register)."
+          }
+        },
+        {
+          "name": "2. Try to Find Orders Domain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue/orders",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue", "orders"]
+            },
+            "description": "Try to list Orders products - this will return 404 because Orders hasn't registered yet."
+          }
+        },
+        {
+          "name": "3. Register: order-history",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"order-history\",\n  \"domain\": \"orders\",\n  \"description\": \"Complete order transaction history with status and totals.\",\n  \"version\": \"1.0.0\",\n  \"endpoint\": \"{{orders_base_url}}/data-products/order-history\",\n  \"tags\": [\"orders\", \"transactions\", \"history\", \"commerce\"],\n  \"owner\": \"orders-team\",\n  \"sla\": {\n    \"uptime\": \"99.9%\",\n    \"freshness\": \"real-time\"\n  },\n  \"schema_definition\": {\n    \"id\": \"string\",\n    \"customer_id\": \"string\",\n    \"sku\": \"string\",\n    \"quantity\": \"integer\",\n    \"total\": \"float\",\n    \"status\": \"enum[confirmed,cancelled]\",\n    \"created_at\": \"ISO8601\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue/register",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue", "register"]
+            },
+            "description": "Manually register the order-history data product. This is what the Orders domain would do automatically at startup."
+          }
+        },
+        {
+          "name": "4. Register: revenue-summary",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"revenue-summary\",\n  \"domain\": \"orders\",\n  \"description\": \"Aggregated revenue metrics broken down by SKU.\",\n  \"version\": \"1.0.0\",\n  \"endpoint\": \"{{orders_base_url}}/data-products/revenue-summary\",\n  \"tags\": [\"orders\", \"revenue\", \"analytics\", \"aggregated\", \"finance\"],\n  \"owner\": \"orders-team\",\n  \"sla\": {\n    \"uptime\": \"99.9%\",\n    \"freshness\": \"real-time\"\n  },\n  \"schema_definition\": {\n    \"total_revenue\": \"float\",\n    \"total_orders\": \"integer\",\n    \"average_order_value\": \"float\",\n    \"by_sku\": \"object{revenue: float, orders: int}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue/register",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue", "register"]
+            },
+            "description": "Register the revenue-summary data product."
+          }
+        },
+        {
+          "name": "5. Verify Orders in Catalogue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue/orders",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue", "orders"]
+            },
+            "description": "Now the Orders domain products appear! The self-serve registration worked."
+          }
+        },
+        {
+          "name": "6. View Full Catalogue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue"]
+            },
+            "description": "All 6 data products are now visible - 2 Customer, 2 Orders, 2 Inventory."
+          }
+        },
+        {
+          "name": "7. Test the Registered Endpoint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{orders_base_url}}/data-products/order-history",
+              "host": ["{{orders_base_url}}"],
+              "path": ["data-products", "order-history"]
+            },
+            "description": "The endpoint was always working - we just made it discoverable via the catalogue."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Demo Scenario",
+      "description": "End-to-end demo workflow that demonstrates the Data Mesh in action.",
+      "item": [
+        {
+          "name": "1. Discover All Data Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue"]
+            },
+            "description": "Step 1: Discover all registered data products."
+          }
+        },
+        {
+          "name": "2. Check Initial Stock Levels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{inventory_base_url}}/data-products/stock-levels",
+              "host": ["{{inventory_base_url}}"],
+              "path": ["data-products", "stock-levels"]
+            },
+            "description": "Step 2: Check initial stock (each SKU starts at 50 units)."
+          }
+        },
+        {
+          "name": "3. Create Order (Small)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('order_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": \"C001\",\n  \"sku\": \"SKU-A\",\n  \"quantity\": 3\n}"
+            },
+            "url": {
+              "raw": "{{orders_base_url}}/data-products/order-history",
+              "host": ["{{orders_base_url}}"],
+              "path": ["data-products", "order-history"]
+            },
+            "description": "Step 3a: Create a small order (3 units of SKU-A)."
+          }
+        },
+        {
+          "name": "4. Create Order (Large - Trigger Low Stock)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": \"C002\",\n  \"sku\": \"SKU-A\",\n  \"quantity\": 46\n}"
+            },
+            "url": {
+              "raw": "{{orders_base_url}}/data-products/order-history",
+              "host": ["{{orders_base_url}}"],
+              "path": ["data-products", "order-history"]
+            },
+            "description": "Step 3b: Create a large order to deplete SKU-A below threshold (5 units)."
+          }
+        },
+        {
+          "name": "5. Check Low Stock Alerts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{inventory_base_url}}/data-products/low-stock-alerts",
+              "host": ["{{inventory_base_url}}"],
+              "path": ["data-products", "low-stock-alerts"]
+            },
+            "description": "Step 4: SKU-A should now appear in low-stock alerts."
+          }
+        },
+        {
+          "name": "6. Check Revenue Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{orders_base_url}}/data-products/revenue-summary",
+              "host": ["{{orders_base_url}}"],
+              "path": ["data-products", "revenue-summary"]
+            },
+            "description": "Step 5: Check aggregated revenue after orders."
+          }
+        },
+        {
+          "name": "7. Search Customer Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogue_base_url}}/catalogue/search?q=customer",
+              "host": ["{{catalogue_base_url}}"],
+              "path": ["catalogue", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "customer"
+                }
+              ]
+            },
+            "description": "Step 6: Discover customer-related data products."
+          }
+        }
+      ]
+    }
+  ]
+}
