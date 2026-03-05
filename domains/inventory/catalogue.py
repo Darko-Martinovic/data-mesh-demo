@@ -1,11 +1,15 @@
 """Register inventory data products with the central catalogue on startup."""
 
+import asyncio
 import os
 
 import httpx
 
 CATALOGUE_URL = os.environ.get("CATALOGUE_URL", "http://localhost:8000")
 SELF_URL = os.environ.get("SELF_URL", "http://localhost:8003")
+
+MAX_RETRIES = 10
+RETRY_DELAY = 2
 
 _PRODUCTS = [
     {
@@ -45,10 +49,17 @@ _PRODUCTS = [
 
 
 async def register_products() -> None:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        for product in _PRODUCTS:
-            try:
-                r = await client.post(f"{CATALOGUE_URL}/catalogue/register", json=product)
-                print(f"[CATALOGUE] Registered '{product['name']}': HTTP {r.status_code}", flush=True)
-            except Exception as exc:
-                print(f"[CATALOGUE] Could not register '{product['name']}': {exc}", flush=True)
+    """Register data products with retry logic for catalogue availability."""
+    for attempt in range(MAX_RETRIES):
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                for product in _PRODUCTS:
+                    r = await client.post(f"{CATALOGUE_URL}/catalogue/register", json=product)
+                    print(f"[CATALOGUE] Registered '{product['name']}': HTTP {r.status_code}", flush=True)
+                return
+        except Exception as exc:
+            if attempt < MAX_RETRIES - 1:
+                print(f"[CATALOGUE] Waiting for catalogue (attempt {attempt + 1}/{MAX_RETRIES})...", flush=True)
+                await asyncio.sleep(RETRY_DELAY)
+            else:
+                print(f"[CATALOGUE] Failed to register after {MAX_RETRIES} attempts: {exc}", flush=True)

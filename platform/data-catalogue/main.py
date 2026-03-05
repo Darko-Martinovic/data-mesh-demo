@@ -1,6 +1,7 @@
 """Data Catalogue — central registry for all domain data products."""
 
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -17,6 +18,32 @@ import store
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+
+# ── URL Helpers ────────────────────────────────────────────────────────────────
+
+SERVICE_PORT_MAP = {
+    "catalogue": "8000",
+    "customer": "8001",
+    "orders": "8002",
+    "inventory": "8003",
+}
+
+
+def _to_localhost_url(url: str) -> str:
+    """Convert internal container URLs to localhost URLs for browser access."""
+    for service, port in SERVICE_PORT_MAP.items():
+        pattern = rf"http://{service}:\d+"
+        if re.search(pattern, url):
+            return re.sub(pattern, f"http://localhost:{port}", url)
+    return url
+
+
+def _externalize_product(product: dict) -> dict:
+    """Convert product endpoint to browser-accessible URL."""
+    p = dict(product)
+    p["endpoint"] = _to_localhost_url(p["endpoint"])
+    return p
 
 
 # ── Schema ─────────────────────────────────────────────────────────────────────
@@ -122,15 +149,16 @@ async def _get_health_data() -> Dict[str, Any]:
                 continue
             seen.add(base)
             domain = product["domain"]
+            external_url = _to_localhost_url(f"{base}/health")
             try:
                 resp = await client.get(f"{base}/health")
                 results[domain] = {
                     "status": "ok" if resp.status_code == 200 else "degraded",
                     "http_status": resp.status_code,
-                    "url": f"{base}/health",
+                    "url": external_url,
                 }
             except Exception as exc:
-                results[domain] = {"status": "unreachable", "error": str(exc), "url": f"{base}/health"}
+                results[domain] = {"status": "unreachable", "error": str(exc), "url": external_url}
 
     return results
 
@@ -172,7 +200,7 @@ async def ui_home(request: Request):
         "active_page": "home",
         "stats": stats,
         "domains": list(domains_map.values()),
-        "products": products,
+        "products": [_externalize_product(p) for p in products],
     })
 
 
@@ -202,7 +230,7 @@ async def ui_catalogue(
     return templates.TemplateResponse("catalogue.html", {
         "request": request,
         "active_page": "catalogue",
-        "products": products,
+        "products": [_externalize_product(p) for p in products],
         "domains": all_domains,
         "current_domain": domain,
         "search_query": q,
@@ -218,12 +246,13 @@ async def ui_product_detail(request: Request, domain: str, name: str):
     if not product:
         raise HTTPException(status_code=404, detail="Data product not found")
 
+    ext_product = _externalize_product(product)
     schema_json = json.dumps(product.get("schema_definition", {}), indent=2)
 
     return templates.TemplateResponse("product.html", {
         "request": request,
         "active_page": "catalogue",
-        "product": product,
+        "product": ext_product,
         "schema_json": schema_json,
     })
 
