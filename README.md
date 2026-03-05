@@ -26,13 +26,22 @@ A runnable three-domain Data Mesh built with **FastAPI + SQLite + asyncio**.
 
 ## Data Mesh Principles Demonstrated
 
+Data Mesh defines **four core principles** (Zhamak Dehghani, 2019):
+
 | Principle | How it is shown |
 |---|---|
-| **Domain ownership** | Each service owns its own SQLite DB, models, and API surface |
-| **Data as a product** | Every endpoint is a named, versioned *data product* with an SLA and schema |
-| **Self-serve platform** | Data Catalogue lets any domain register and discover products at runtime |
-| **Federated governance** | PII masking policy enforced at the domain boundary (Customer service) |
+| **1. Domain ownership** | Each service owns its own SQLite DB, models, and API surface |
+| **2. Data as a product** | Every endpoint is a named, versioned *data product* with an SLA and schema |
+| **3. Self-serve data platform** | Data Catalogue lets any domain register and discover products at runtime |
+| **4. Federated computational governance** | PII masking policy enforced at the domain boundary (Customer service) |
+
+### Bonus: Architectural Patterns
+
+| Pattern | How it is shown |
+|---|---|
 | **Event-driven decoupling** | `EventBus` pub/sub within each service; `order.created` / `inventory.low` events |
+
+> **Note:** Event-driven architecture is not a Data Mesh principle — it's an implementation pattern that supports loose coupling between domains.
 
 ---
 
