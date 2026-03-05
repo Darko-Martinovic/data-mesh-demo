@@ -1,13 +1,13 @@
 # Each service is built from the REPO ROOT as context so Dockerfiles can COPY
 # both the domain folder and the shared platform/event_bus package.
+#
+# Compatible with both Docker Compose and Podman Compose.
 
 services:
 
   # ── Data Catalogue (port 8000) ─────────────────────────────────────────────
   catalogue:
-    build:
-      context: .
-      dockerfile: platform/data-catalogue/Dockerfile
+    build: ./platform/data-catalogue
     ports:
       - "8000:8000"
     healthcheck:
@@ -19,9 +19,7 @@ services:
 
   # ── Customer Domain (port 8001) ────────────────────────────────────────────
   customer:
-    build:
-      context: .
-      dockerfile: domains/customer/Dockerfile
+    build: ./domains/customer
     ports:
       - "8001:8001"
     environment:
@@ -33,9 +31,7 @@ services:
 
   # ── Orders Domain (port 8002) ──────────────────────────────────────────────
   orders:
-    build:
-      context: .
-      dockerfile: domains/orders/Dockerfile
+    build: ./domains/orders
     ports:
       - "8002:8002"
     environment:
@@ -49,9 +45,7 @@ services:
 
   # ── Inventory Domain (port 8003) ───────────────────────────────────────────
   inventory:
-    build:
-      context: .
-      dockerfile: domains/inventory/Dockerfile
+    build: ./domains/inventory
     ports:
       - "8003:8003"
     environment:

@@ -1,23 +1,14 @@
 """Inventory Domain — owns stock levels and low-stock alert data products."""
 
-import os
-import sys
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, List
 
 from fastapi import FastAPI, HTTPException
 
-# ── Resolve shared event_bus package ─────────────────────────────────────────
-_here = os.path.dirname(os.path.abspath(__file__))
-_platform = os.path.abspath(os.path.join(_here, "../../platform"))
-if _platform not in sys.path:
-    sys.path.insert(0, _platform)
-
-from event_bus.bus import EventBus  # noqa: E402
-
-import catalogue  # noqa: E402
-import db  # noqa: E402
-from models import LowStockAlert, Product, StockReserveRequest  # noqa: E402
+from event_bus.bus import EventBus
+import catalogue
+import db
+from models import LowStockAlert, Product, StockReserveRequest
 
 
 # ── Event handlers ────────────────────────────────────────────────────────────

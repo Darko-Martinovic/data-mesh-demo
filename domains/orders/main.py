@@ -1,7 +1,6 @@
 """Orders Domain — owns order transactions and revenue data products."""
 
 import os
-import sys
 import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, List
@@ -9,17 +8,10 @@ from typing import AsyncIterator, List
 import httpx
 from fastapi import FastAPI, HTTPException
 
-# ── Resolve shared event_bus package ─────────────────────────────────────────
-_here = os.path.dirname(os.path.abspath(__file__))
-_platform = os.path.abspath(os.path.join(_here, "../../platform"))
-if _platform not in sys.path:
-    sys.path.insert(0, _platform)
-
-from event_bus.bus import EventBus  # noqa: E402
-
-import catalogue  # noqa: E402
-import db  # noqa: E402
-from models import CreateOrderRequest, Order, RevenueSummary  # noqa: E402
+from event_bus.bus import EventBus
+import catalogue
+import db
+from models import CreateOrderRequest, Order, RevenueSummary
 
 CUSTOMER_URL = os.environ.get("CUSTOMER_URL", "http://localhost:8001")
 INVENTORY_URL = os.environ.get("INVENTORY_URL", "http://localhost:8003")
